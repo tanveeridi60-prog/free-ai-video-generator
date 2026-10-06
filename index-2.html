@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Free browser-based AI-style video concept generator.">
+<title>Free AI Video Generator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;background:#070b1d;color:#fff;font-family:Arial,sans-serif}.app{max-width:760px;margin:auto}.card{background:linear-gradient(180deg,#121a3b,#0d1430);padding:22px;border-radius:24px;border:1px solid #26345f;box-shadow:0 18px 50px #0006}h1{margin:0 0 8px;font-size:30px}.sub{color:#aeb8d5;margin:0 0 22px;line-height:1.5}label{display:block;font-weight:700;margin:17px 0 8px}textarea,select{width:100%;padding:15px;border-radius:15px;border:1px solid #3b4770;background:#090f2a;color:#fff;font-size:16px;outline:none}textarea:focus,select:focus{border-color:#8065ff}textarea{min-height:130px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}button{width:100%;height:58px;margin-top:22px;border:0;border-radius:15px;background:linear-gradient(90deg,#704df0,#925cff);color:#fff;font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 8px 25px #704df044}button:active{transform:scale(.99)}button.secondary{height:48px;margin-top:12px;background:#202b50;box-shadow:none;font-size:16px}.result{margin-top:20px;padding:17px;border-radius:16px;background:#090f2a;line-height:1.5}.progress{height:12px;background:#252f52;border-radius:20px;overflow:hidden;margin:12px 0}.bar{height:100%;width:0;background:linear-gradient(90deg,#704df0,#a778ff);transition:.2s}.badges{margin-top:8px}.badge{display:inline-block;padding:7px 11px;border-radius:20px;background:#202b50;margin:4px;color:#e9e5ff}.previewBox{display:none;margin-top:20px}.previewHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.previewTitle{font-weight:800;font-size:18px}.canvasWrap{position:relative;border-radius:18px;overflow:hidden;background:#000;border:1px solid #26345f}.canvasWrap canvas{width:100%;display:block}.motion{position:absolute;left:12px;top:12px;padding:6px 10px;border-radius:20px;background:#0009;font-size:12px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.note{color:#8995b9;font-size:13px;margin-top:12px;line-height:1.5}.error{color:#ffb5b5}@media(max-width:560px){.row{grid-template-columns:1fr}.card{padding:17px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="app"><div class="card">
+<h1>🎬 Free AI Video Generator</h1>
+<p class="sub">₹0 browser version — turn your idea into an animated video-style preview without a paid API.</p>
+
+<label for="prompt">What should the video be about?</label>
+<textarea id="prompt" placeholder="A superhero flying over a futuristic city at sunset..."></textarea>
+
+<div class="row">
+<div><label for="style">Style</label><select id="style"><option>Cinematic</option><option>Anime</option><option>3D Animation</option><option>Realistic</option><option>Cartoon</option></select></div>
+<div><label for="duration">Duration</label><select id="duration"><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></div>
+</div>
+
+<button id="generateBtn">✨ Generate Free Video</button>
+<div id="result" class="result">Ready 🚀</div>
+
+<div id="previewBox" class="previewBox">
+  <div class="previewHead"><div class="previewTitle">🎞️ Motion Preview</div><div id="timeLabel">0 / 5s</div></div>
+  <div class="canvasWrap"><canvas id="videoCanvas" width="1280" height="720"></canvas><div class="motion">BROWSER PREVIEW</div></div>
+  <div class="controls">
+    <button class="secondary" id="playBtn">⏸ Pause</button>
+    <button class="secondary" id="downloadBtn">📥 Download WebM</button>
+  </div>
+  <div class="note">This is a browser-generated animated preview, not a real AI-generated video. A real AI model/API can be connected later.</div>
+</div>
+</div></div>
+
+<script>
+const promptEl=document.getElementById('prompt');
+const styleEl=document.getElementById('style');
+const durationEl=document.getElementById('duration');
+const result=document.getElementById('result');
+const generateBtn=document.getElementById('generateBtn');
+const previewBox=document.getElementById('previewBox');
+const canvas=document.getElementById('videoCanvas');
+const ctx=canvas.getContext('2d');
+const playBtn=document.getElementById('playBtn');
+const downloadBtn=document.getElementById('downloadBtn');
+const timeLabel=document.getElementById('timeLabel');
+let animationId=null, playing=true, startTime=0, pausedAt=0, currentDuration=5, currentPrompt='', currentStyle='Cinematic';
+let recordedBlob=null;
+
+function wrapText(text,max=34){const words=text.split(/\s+/);const lines=[];let line='';for(const w of words){if((line+' '+w).trim().length>max){if(line)lines.push(line);line=w}else line+=(line?' ':'')+w}if(line)lines.push(line);return lines.slice(0,4)}
+function drawFrame(t){
+ const w=canvas.width,h=canvas.height;
+ const pulse=(Math.sin(t*2)+1)/2;
+ const shift=(t*55)%w;
+ const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#080d24');g.addColorStop(1,currentStyle==='Anime'?'#24105a':currentStyle==='Cartoon'?'#163b58':'#111b3d');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+ for(let i=0;i<18;i++){const x=(i*97-shift*.35)%w;const y=(i*53+Math.sin(t+i)*18+160)%h;ctx.fillStyle='rgba(140,110,255,.16)';ctx.beginPath();ctx.arc(x<0?x+w:x,y,3+(i%3),0,Math.PI*2);ctx.fill()}
+ // horizon / city
+ ctx.fillStyle='rgba(5,8,20,.75)';ctx.fillRect(0,h*.68,w,h*.32);
+ for(let x=0;x<w;x+=90){const bh=50+((x/90)%5)*28;ctx.fillStyle='#101936';ctx.fillRect(x,h*.68-bh,68,bh);for(let yy=h*.68-bh+12;yy<h*.68-8;yy+=18){ctx.fillStyle='rgba(255,215,110,.45)';ctx.fillRect(x+10,yy,7,5);ctx.fillRect(x+28,yy,7,5)}}
+ // moving glow
+ const gx=(shift+w*.15)%w;const gg=ctx.createRadialGradient(gx,h*.35,10,gx,h*.35,190);gg.addColorStop(0,'rgba(150,100,255,.35)');gg.addColorStop(1,'rgba(150,100,255,0)');ctx.fillStyle=gg;ctx.fillRect(0,0,w,h);
+ ctx.fillStyle='#9a79ff';ctx.font='bold 28px Arial';ctx.fillText('FREE AI VIDEO',55,65);
+ ctx.fillStyle='#fff';ctx.font='bold 42px Arial';wrapText(currentPrompt).forEach((line,i)=>ctx.fillText(line,55,145+i*54));
+ ctx.fillStyle='#b9c2df';ctx.font='22px Arial';ctx.fillText(currentStyle+' • '+currentDuration+' seconds',55,h-48);
+ // simple moving subject
+ const sx=w*.72+Math.sin(t*1.3)*70, sy=h*.42+Math.cos(t*1.8)*28;
+ ctx.save();ctx.translate(sx,sy);ctx.rotate(Math.sin(t)*.08);ctx.fillStyle='rgba(167,130,255,.28)';ctx.beginPath();ctx.arc(0,0,75+pulse*8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-55,15);ctx.lineTo(0,-28);ctx.lineTo(55,15);ctx.lineTo(15,10);ctx.lineTo(0,48);ctx.lineTo(-15,10);ctx.closePath();ctx.fill();ctx.restore();
+}
+function renderLoop(ms){if(!playing)return;const elapsed=(ms-startTime)/1000;const t=Math.min(elapsed,currentDuration);drawFrame(t);timeLabel.textContent=Math.min(currentDuration,elapsed).toFixed(1)+' / '+currentDuration+'s';if(elapsed<currentDuration)animationId=requestAnimationFrame(renderLoop);else{playing=false;playBtn.textContent='▶ Play';pausedAt=0}}
+function startPreview(){cancelAnimationFrame(animationId);playing=true;pausedAt=0;startTime=performance.now();playBtn.textContent='⏸ Pause';requestAnimationFrame(renderLoop)}
+playBtn.onclick=()=>{if(playing){playing=false;cancelAnimationFrame(animationId);pausedAt=(performance.now()-startTime)/1000;playBtn.textContent='▶ Play'}else{playing=true;startTime=performance.now()-pausedAt*1000;playBtn.textContent='⏸ Pause';requestAnimationFrame(renderLoop)}};
+
+generateBtn.onclick=()=>{
+ const p=promptEl.value.trim(); if(!p){result.innerHTML='<span class="error">⚠️ Please enter a prompt first.</span>';return}
+ currentPrompt=p;currentStyle=styleEl.value;currentDuration=Number(durationEl.value);recordedBlob=null;
+ let progress=0; generateBtn.disabled=true; result.innerHTML='🧠 Preparing your free video...<div class="progress"><div id="bar" class="bar"></div></div><span id="status">Creating scenes...</span><div class="badges"><span class="badge">No API key</span><span class="badge">₹0</span></div>';
+ const timer=setInterval(()=>{progress+=10;document.getElementById('bar').style.width=progress+'%';document.getElementById('status').textContent=progress<40?'Creating scene...':progress<80?'Applying '+currentStyle+' style...':'Finalizing motion preview...';if(progress>=100){clearInterval(timer);generateBtn.disabled=false;result.innerHTML='<b>✅ Free preview ready!</b><div class="badges"><span class="badge">No API key</span><span class="badge">₹0</span></div>';previewBox.style.display='block';drawFrame(0);startPreview();}} ,100);
+};
+
+downloadBtn.onclick=()=>{
+ if(!canvas.captureStream || !window.MediaRecorder){result.innerHTML='<span class="error">⚠️ Your browser does not support WebM recording. Try Chrome.</span>';return}
+ downloadBtn.disabled=true; result.innerHTML='🎥 Recording your browser preview...';
+ const stream=canvas.captureStream(30); const chunks=[]; let rec;
+ try{rec=new MediaRecorder(stream,{mimeType:'video/webm'});}catch(e){rec=new MediaRecorder(stream)}
+ rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+ rec.onstop=()=>{recordedBlob=new Blob(chunks,{type:'video/webm'});const url=URL.createObjectURL(recordedBlob);const a=document.createElement('a');a.href=url;a.download='free-ai-video-preview.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);downloadBtn.disabled=false;result.innerHTML='<b>✅ Preview downloaded!</b><div class="badges"><span class="badge">WebM</span><span class="badge">₹0</span></div>';};
+ const oldPlaying=playing; playing=true; const end=performance.now()+currentDuration*1000; function recordLoop(ms){const elapsed=(currentDuration*1000-(end-ms))/1000;drawFrame(Math.min(currentDuration,elapsed));if(ms<end)requestAnimationFrame(recordLoop);else rec.stop()} rec.start();requestAnimationFrame(recordLoop);
+};
+
+drawFrame(0);
+</script>
+</body>
+</html>
